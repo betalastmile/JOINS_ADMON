@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Formulario de Referidos Admon</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --blue: #0077b6;
+  --blue-light: #e8f6ff;
+  --blue-mid: #cce9f8;
+  --green: #22c55e;
+  --red: #dc2626;
+  --gray: #f0f4f8;
+  --border: #d1dde8;
+  --text: #1a2535;
+  --muted: #64748b;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'IBM Plex Sans', Arial, sans-serif;
+  background: var(--gray);
+  color: var(--text);
+  padding: 24px 16px 60px;
+  min-height: 100vh;
+}
+form {
+  max-width: 660px;
+  margin: auto;
+  background: #fff;
+  padding: 32px 28px;
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.09);
+}
+h2 { text-align: center; color: var(--blue); font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+.subtitle { text-align: center; color: var(--muted); font-size: 13px; margin-bottom: 20px; }
+
+.section-divider {
+  margin: 24px 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+.section-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+label { display: block; margin-top: 14px; font-size: 13px; font-weight: 600; color: var(--text); }
+label span.req { color: var(--red); margin-left: 2px; }
+
+input[type=text], input[type=tel], select {
+  width: 100%;
+  padding: 10px 13px;
+  margin-top: 5px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  font-size: 15px;
+  font-family: inherit;
+  background: #fafdff;
+  color: var(--text);
+  transition: border-color 0.2s;
+}
+input:focus, select:focus { outline: none; border-color: var(--blue); background: #fff; }
+.row { display: flex; gap: 12px; }
+.row > * { flex: 1; min-width: 0; }
+
+/* ── AUTOCOMPLETE ── */
+.autocomplete-wrap { position: relative; margin-top: 5px; }
+.autocomplete-wrap input { margin-top: 0; }
+.autocomplete-list {
+  position: absolute;
+  z-index: 999;
+  width: 100%;
+  background: #fff;
+  border: 1.5px solid var(--blue);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  max-height: 220px;
+  overflow-y: auto;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+  display: none;
+}
+.autocomplete-list.open { display: block; }
+.autocomplete-item {
+  padding: 10px 13px;
+  font-size: 14px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--gray);
+  color: var(--text);
+  transition: background 0.12s;
+}
+.autocomplete-item:last-child { border-bottom: none; }
+.autocomplete-item:hover, .autocomplete-item.active { background: var(--blue-light); color: var(--blue); }
+.autocomplete-item em { font-style: normal; font-weight: 700; color: var(--blue); }
+.autocomplete-empty { padding: 10px 13px; font-size: 13px; color: var(--muted); font-style: italic; }
+.autocomplete-loading { padding: 10px 13px; font-size: 13px; color: var(--muted); }
+
+#botonEnviar {
+  width: 100%;
+  margin-top: 26px;
+  padding: 14px;
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+#botonEnviar:hover { background: #005f8e; }
+#botonEnviar:active { transform: scale(0.98); }
+#botonEnviar:disabled { opacity: 0.55; cursor: not-allowed; }
+
+#status { margin-top: 14px; font-weight: 700; text-align: center; font-size: 14px; min-height: 20px; }
+#status.ok   { color: var(--green); }
+#status.err  { color: var(--red); }
+#status.info { color: var(--muted); }
+
+#folioBox {
+  display: none;
+  margin-top: 20px;
+  padding: 18px;
+  border-radius: 12px;
+  background: linear-gradient(120deg, var(--blue-light), #f0faff);
+  border: 1.5px solid var(--blue-mid);
+  text-align: center;
+}
+#folioBox h3 { font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+#folioValue { font-size: 28px; font-weight: 900; letter-spacing: 2px; color: var(--blue); margin-bottom: 12px; }
+.folio-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.btn-ghost {
+  background: transparent;
+  color: var(--blue);
+  border: 1.5px solid var(--blue);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-ghost:hover { background: var(--blue-light); }
+
+/* ── INE / FOTO UPLOAD ── */
+.ine-section {
+  margin-top: 18px;
+  padding: 18px;
+  background: #f7fafd;
+  border: 1.5px dashed var(--border);
+  border-radius: 12px;
+}
+.ine-section-title { font-size: 13px; font-weight: 700; color: var(--blue); margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+.ine-section-title .badge { background: var(--blue); color: #fff; font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 700; }
+.ine-slots { display: flex; gap: 12px; }
+.ine-slot { flex: 1; }
+.ine-slot label { font-size: 12px; font-weight: 600; color: var(--muted); margin-top: 0; margin-bottom: 6px; }
+.drop-zone {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16/10;
+  border: 2px dashed var(--border);
+  border-radius: 10px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  overflow: hidden;
+}
+.drop-zone:hover, .drop-zone.dragover { border-color: var(--blue); background: var(--blue-light); }
+.drop-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.drop-zone .dz-icon { font-size: 28px; margin-bottom: 4px; }
+.drop-zone .dz-label { font-size: 12px; color: var(--muted); text-align: center; padding: 0 8px; font-weight: 600; }
+.drop-zone .dz-hint { font-size: 10px; color: #94a3b8; margin-top: 2px; }
+.drop-zone .preview-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 8px; display: none; }
+.drop-zone.has-file .preview-img { display: block; }
+.drop-zone.has-file .dz-icon,
+.drop-zone.has-file .dz-label,
+.drop-zone.has-file .dz-hint { display: none; }
+.drop-zone .clear-btn {
+  display: none;
+  position: absolute;
+  top: 6px; right: 6px;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 22px; height: 22px;
+  font-size: 13px;
+  line-height: 22px;
+  text-align: center;
+  cursor: pointer;
+  z-index: 2;
+  padding: 0;
+}
+.drop-zone.has-file .clear-btn { display: block; }
+.ine-status { margin-top: 8px; font-size: 12px; font-weight: 600; text-align: center; min-height: 16px; }
+.ine-status.ok   { color: var(--green); }
+.ine-status.warn { color: #f59e0b; }
+.ine-status.err  { color: var(--red); }
+
+/* drop-zone de una sola columna (cuenta) */
+.drop-zone-single { max-width: 320px; }
+
+#uploadProgress { display: none; margin-top: 12px; }
+#uploadProgress .prog-label { font-size: 13px; font-weight: 700; margin-bottom: 5px; color: var(--muted); }
+#uploadTrack { background: #e5e7eb; height: 10px; border-radius: 8px; overflow: hidden; }
+#uploadBar { width: 0%; height: 100%; background: var(--green); transition: width 0.2s; }
+#uploadPct { font-size: 11px; margin-top: 3px; color: var(--muted); }
+
+#cargandoCatalogos {
+  text-align: center;
+  font-size: 13px;
+  color: var(--muted);
+  padding: 8px 0 4px;
+}
+
+/* ── CONSULTA DE ESTATUS ── */
+#botonConsultar {
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  background: transparent;
+  color: var(--blue);
+  border: 1.5px solid var(--blue);
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+#botonConsultar:hover { background: var(--blue-light); }
+
+#modalEstatus {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(15, 23, 42, 0.55);
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+#modalEstatus.open { display: flex; }
+.modal-card {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 14px;
+  padding: 26px 22px 22px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+}
+.modal-card h3 { color: var(--blue); font-size: 18px; margin-bottom: 4px; text-align: center; }
+.modal-card .modal-sub { color: var(--muted); font-size: 13px; text-align: center; margin-bottom: 8px; }
+.modal-close {
+  position: absolute; top: 10px; right: 12px;
+  background: none; border: none; font-size: 20px; color: var(--muted); cursor: pointer;
+}
+#btnBuscarEstatus {
+  width: 100%;
+  margin-top: 14px;
+  padding: 12px;
+  background: var(--blue);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+}
+#btnBuscarEstatus:hover { background: #005f8e; }
+#btnBuscarEstatus:disabled { opacity: 0.55; cursor: not-allowed; }
+#estatusMsg { margin-top: 12px; font-size: 13px; font-weight: 700; text-align: center; min-height: 18px; }
+#estatusMsg.err  { color: var(--red); }
+#estatusMsg.info { color: var(--muted); }
+#estatusResultado { display: none; margin-top: 14px; border: 1.5px solid var(--blue-mid); border-radius: 12px; overflow: hidden; }
+.est-head { background: var(--blue-light); padding: 12px 14px; text-align: center; }
+.est-head .est-folio { font-size: 12px; color: var(--muted); font-weight: 600; }
+.est-badge {
+  display: inline-block; margin-top: 4px; padding: 5px 14px; border-radius: 20px;
+  background: var(--blue); color: #fff; font-size: 14px; font-weight: 700;
+}
+.est-row { display: flex; justify-content: space-between; gap: 12px; padding: 10px 14px; border-top: 1px solid var(--gray); font-size: 14px; }
+.est-row span:first-child { color: var(--muted); font-weight: 600; }
+.est-row span:last-child { text-align: right; font-weight: 600; word-break: break-word; }
+</style>
+</head>
+<body>
+
+<form id="formReferidos" onsubmit="return false;">
+
+  <h2>🤝 Formulario de Referidos Admon</h2>
+  <p class="subtitle">Completa los datos y adjunta los documentos solicitados del referido</p>
+
+  <!-- INSTRUCCIONES -->
+  <div style="margin: 18px 0 6px; background: #f0faff; border: 1.5px solid var(--blue-mid); border-radius: 12px; padding: 16px 18px; font-size: 13px;">
+    <div style="font-weight: 700; color: var(--blue); margin-bottom: 10px; font-size: 14px;">📋 Documentos requeridos</div>
+
+    <div style="font-weight: 700; color: var(--text); margin-bottom: 6px;">✅ Obligatorios</div>
+    <ul style="margin: 0 0 12px 18px; color: var(--text); line-height: 1.8;">
+      <li><strong>INE</strong> (frente y reverso) y vigente</li>
+      <li><strong>Comprobante de domicilio</strong> <span style="color:var(--red);font-weight:600;">— vigencia no mayor a 3 meses</span></li>
+      <li><strong>Estado de cuenta bancario con datos visibles:</strong> nombre del trabajador, número de cuenta, clabe interbancaria y fecha <span style="color:var(--red);font-weight:600;">— vigencia no mayor a 3 meses</span></li>
+    </ul>
+
+    <div style="font-weight: 700; color: var(--text); margin-bottom: 6px;">📎 Opcionales <span style="font-weight:400;color:var(--muted);">(si aplica)</span></div>
+    <ul style="margin: 0 0 0 18px; color: var(--muted); line-height: 1.8;">
+      <li><strong>Licencia de conducir</strong> Vigente</li>
+      <li><strong>Tarjeta de circulación</strong> Vigente</li>
+      <li><strong>Constancia de situación fiscal</strong> <span style="color:var(--red);font-weight:600;">— vigencia no mayor a 3 meses</span></li>
+      <li><strong>NSS</strong> — Documento emitido de la página oficial del IMSS</li>
+    </ul>
+  </div>
+  <div id="cargandoCatalogos">⏳ Cargando catálogos…</div>
+
+  <!-- QUIEN REFIERE -->
+  <div class="section-divider">Quien refiere</div>
+  <label>👤 Nombre completo de quien refiere <span class="req">*</span></label>
+  <input type="text" id="nombreRefiere" placeholder="Nombre completo" required>
+
+  <label>🏛️ Área (Dirección)<span class="req">*</span></label>
+  <select id="areaRefiere">
+    <option value="">Cargando…</option>
+  </select>
+
+  <div class="row">
+    <div>
+      <label>🗺️ Estado de quien refiere <span class="req">*</span></label>
+      <select id="estadoRefiere">
+        <option value="">— Selecciona —</option>
+        <option>Aguascalientes</option><option>Baja California</option><option>Baja California Sur</option>
+        <option>Campeche</option><option>Chiapas</option><option>Chihuahua</option>
+        <option>Ciudad de México</option><option>Coahuila</option><option>Colima</option>
+        <option>Durango</option><option>Estado de México</option><option>Guanajuato</option>
+        <option>Guerrero</option><option>Hidalgo</option><option>Jalisco</option>
+        <option>Michoacán</option><option>Morelos</option><option>Nayarit</option>
+        <option>Nuevo León</option><option>Oaxaca</option><option>Puebla</option>
+        <option>Querétaro</option><option>Quintana Roo</option><option>San Luis Potosí</option>
+        <option>Sinaloa</option><option>Sonora</option><option>Tabasco</option>
+        <option>Tamaulipas</option><option>Tlaxcala</option><option>Veracruz</option>
+        <option>Yucatán</option><option>Zacatecas</option>
+      </select>
+    </div>
+    <div>
+      <label>🏙️ Ciudad de quien refiere <span class="req">*</span></label>
+      <input type="text" id="ciudadRefiere" placeholder="Ciudad o municipio">
+    </div>
+  </div>
+
+  <!-- REFERIDO -->
+  <div class="section-divider">Datos del referido</div>
+  <label>👤 Nombre completo de persona referida <span class="req">*</span></label>
+  <input type="text" id="nombreReferido" placeholder="Nombre completo" required>
+
+  <div class="row">
+    <div>
+      <label>📞 Teléfono de persona referida 1 <span class="req">*</span></label>
+      <input type="tel" id="telefono1" placeholder="10 dígitos" required pattern="\d{10}" maxlength="10" inputmode="numeric">
+    </div>
+    <div>
+      <label>📞 Teléfono de persona referida 2</label>
+      <input type="tel" id="telefono2" placeholder="10 dígitos (opcional)" pattern="\d{10}" maxlength="10" inputmode="numeric">
+    </div>
+  </div>
+
+  <!-- INE -->
+  <div class="section-divider">Identificación de persona referida</div>
+  <div class="ine-section">
+    <div class="ine-section-title">
+      🪪 INE del referido <span class="badge">Requerido</span>
+    </div>
+    <div class="ine-slots">
+      <div class="ine-slot">
+        <label>Frente (lado con foto)</label>
+        <div class="drop-zone" id="dzFrente">
+          <input type="file" id="ineFrente" accept="image/*">
+          <img class="preview-img" id="prevFrente" alt="Vista previa frente INE">
+          <button class="clear-btn" type="button" data-target="ineFrente" data-prev="prevFrente" data-dz="dzFrente" data-st="stFrente">✕</button>
+          <div class="dz-icon">📷</div>
+          <div class="dz-label">Frente del INE</div>
+          <div class="dz-hint">Toca para foto o galería · Arrastra aquí</div>
+        </div>
+        <div class="ine-status warn" id="stFrente">Sin foto</div>
+      </div>
+      <div class="ine-slot">
+        <label>Reverso (lado con código)</label>
+        <div class="drop-zone" id="dzReverso">
+          <input type="file" id="ineReverso" accept="image/*">
+          <img class="preview-img" id="prevReverso" alt="Vista previa reverso INE">
+          <button class="clear-btn" type="button" data-target="ineReverso" data-prev="prevReverso" data-dz="dzReverso" data-st="stReverso">✕</button>
+          <div class="dz-icon">📷</div>
+          <div class="dz-label">Reverso del INE</div>
+          <div class="dz-hint">Toca para foto o galería · Arrastra aquí</div>
+        </div>
+        <div class="ine-status warn" id="stReverso">Sin foto</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- NÚMERO DE CUENTA -->
+  <div class="section-divider">Cuenta bancaria de persona referida</div>
+  <div class="ine-section">
+    <div class="ine-section-title">
+      🏦 Cuenta bancaria <span class="badge">Requerido</span>
+    </div>
+    <div class="drop-zone drop-zone-single" id="dzCuenta">
+      <input type="file" id="fotoCuenta" accept="image/*">
+      <img class="preview-img" id="prevCuenta" alt="Vista previa número de cuenta">
+      <button class="clear-btn" type="button" data-target="fotoCuenta" data-prev="prevCuenta" data-dz="dzCuenta" data-st="stCuenta">✕</button>
+      <div class="dz-icon">🏦</div>
+      <div class="dz-label">Cuenta bancaria</div>
+      <div class="dz-hint">Toca para foto o galería · Arrastra aquí</div>
+    </div>
+    <div class="ine-status warn" id="stCuenta">Sin foto</div>
+  </div>
+
+  <!-- DOCUMENTOS ADICIONALES -->
+  <div class="section-divider">Documentos adicionales del referido</div>
+
+  <!-- CONSTANCIA FISCAL (Opcional) -->
+  <div class="ine-section" style="margin-top:14px;">
+    <div class="ine-section-title">
+      🧾 Constancia de situación fiscal <span class="badge" style="background:var(--muted);">Opcional</span>
+    </div>
+    <div class="drop-zone drop-zone-single" id="dzFiscal">
+      <input type="file" id="fotoFiscal" accept="image/*">
+      <img class="preview-img" id="prevFiscal" alt="Vista previa constancia fiscal">
+      <button class="clear-btn" type="button" data-target="fotoFiscal" data-prev="prevFiscal" data-dz="dzFiscal" data-st="stFiscal">✕</button>
+      <div class="dz-icon">🧾</div>
+      <div class="dz-label">Constancia fiscal</div>
+      <div class="dz-hint">Toca para foto o galería · Arrastra aquí</div>
+    </div>
+    <div class="ine-status" id="stFiscal" style="color:var(--muted);">Opcional</div>
+  </div>
+
+  <!-- LICENCIA (Si aplica) -->
+  <div class="ine-section" style="margin-top:14px;">
+    <div class="ine-section-title">
+      🪪 Licencia de conducir <span class="badge" style="background:var(--muted);">Si aplica</span>
+    </div>
+    <div class="drop-zone drop-zone-single" id="dzLicencia">
+      <input type="file" id="fotoLicencia" accept="image/*">
+      <img class="preview-img" id="prevLicencia" alt="Vista previa licencia">
+      <button class="clear-btn" type="button" data-target="fotoLicencia" data-prev="prevLicencia" data-dz="dzLicencia" data-st="stLicencia">✕</button>
+      <div class="dz-icon">🚗</div>
+      <div class="dz-label">Licencia de conducir</div>
+      <div class="dz-hint">Toca para foto o galería · Arrastra aquí</div>
+    </div>
+    <div class="ine-status" id="stLicencia" style="color:var(--muted);">Opcional — solo si aplica</div>
+  </div>
+
+  <!-- TARJETA DE CIRCULACIÓN (Si aplica) -->
+  <div class="ine-section" style="margin-top:14px;">
+    <div class="ine-section-title">
+      🚘 Tarjeta de circulación <span class="badge" style="background:var(--muted);">Si aplica</span>
+    </div>
+    <div class="drop-zone drop-zone-single" id="dzCirculacion">
+      <input type="file" id="fotoCirculacion" accept="image/*">
+      <img class="preview-img" id="prevCirculacion" alt="Vista previa tarjeta de circulación">
+      <button class="clear-btn" type="button" data-target="fotoCirculacion" data-prev="prevCirculacion" data-dz="dzCirculacion" data-st="stCirculacion">✕</button>
+      <div class="dz-icon">📋</div>
+      <div class="dz-label">Tarjeta de circulación</div>
+      <div class="dz-hint">Toca para foto o galería · Arrastra aquí</div>
+    </div>
+    <div class="ine-status" id="stCirculacion" style="color:var(--muted);">Opcional — solo si aplica</div>
+  </div>
+
+  <!-- COMPROBANTE DE DOMICILIO (Obligatorio) -->
+  <div class="ine-section" style="margin-top:14px;">
+    <div class="ine-section-title">
+      🏠 Comprobante de domicilio <span class="badge">Requerido</span>
+    </div>
+    <div class="drop-zone drop-zone-single" id="dzComprobante">
+      <input type="file" id="fotoComprobante" accept="image/*">
+      <img class="preview-img" id="prevComprobante" alt="Vista previa comprobante">
+      <button class="clear-btn" type="button" data-target="fotoComprobante" data-prev="prevComprobante" data-dz="dzComprobante" data-st="stComprobante">✕</button>
+      <div class="dz-icon">🏠</div>
+      <div class="dz-label">Comprobante de domicilio</div>
+      <div class="dz-hint">Toca para foto o galería · Arrastra aquí</div>
+    </div>
+    <div class="ine-status warn" id="stComprobante">Sin foto</div>
+  </div>
+
+  <!-- IMSS (Si aplica) -->
+  <div class="ine-section" style="margin-top:14px;">
+    <div class="ine-section-title">
+      🏥 Numero seguro social <span class="badge" style="background:var(--muted);">Si aplica</span>
+    </div>
+    <div class="drop-zone drop-zone-single" id="dzImss">
+      <input type="file" id="fotoImss" accept="image/*">
+      <img class="preview-img" id="prevImss" alt="Vista previa IMSS">
+      <button class="clear-btn" type="button" data-target="fotoImss" data-prev="prevImss" data-dz="dzImss" data-st="stImss">✕</button>
+      <div class="dz-icon">🏥</div>
+      <div class="dz-label">Documento IMSS</div>
+      <div class="dz-hint">Toca para foto o galería · Arrastra aquí</div>
+    </div>
+    <div class="ine-status" id="stImss" style="color:var(--muted);">Opcional — solo si aplica</div>
+  </div>
+
+  <!-- UBICACIÓN -->
+  <div class="section-divider">Ubicación de persona referida</div>
+  <div class="row">
+    <div>
+      <label>🗺️ Estado</label>
+      <select id="estado">
+        <option value="">— Selecciona —</option>
+        <option>Aguascalientes</option><option>Baja California</option><option>Baja California Sur</option>
+        <option>Campeche</option><option>Chiapas</option><option>Chihuahua</option>
+        <option>Ciudad de México</option><option>Coahuila</option><option>Colima</option>
+        <option>Durango</option><option>Estado de México</option><option>Guanajuato</option>
+        <option>Guerrero</option><option>Hidalgo</option><option>Jalisco</option>
+        <option>Michoacán</option><option>Morelos</option><option>Nayarit</option>
+        <option>Nuevo León</option><option>Oaxaca</option><option>Puebla</option>
+        <option>Querétaro</option><option>Quintana Roo</option><option>San Luis Potosí</option>
+        <option>Sinaloa</option><option>Sonora</option><option>Tabasco</option>
+        <option>Tamaulipas</option><option>Tlaxcala</option><option>Veracruz</option>
+        <option>Yucatán</option><option>Zacatecas</option>
+      </select>
+    </div>
+    <div>
+      <label>🏙️ Ciudad / Municipio de persona referida</label>
+      <input type="text" id="ciudadMunicipio" placeholder="Ciudad o municipio">
+    </div>
+  </div>
+
+  <!-- VACANTE -->
+  <div class="section-divider">Detalles de la vacante</div>
+
+  <label>🏢 Sucursal ofrecida a persona referida <span class="req">*</span></label>
+  <div class="autocomplete-wrap">
+    <input type="text" id="sucursal" placeholder="Escribe para buscar tienda…" autocomplete="off" required>
+    <div class="autocomplete-list" id="listSucursal">
+      <div class="autocomplete-loading">Cargando tiendas…</div>
+    </div>
+  </div>
+
+  <label>💼 Puesto ofrecido a persona referida <span class="req">*</span></label>
+  <div class="autocomplete-wrap">
+    <input type="text" id="puesto" placeholder="Escribe para buscar puesto…" autocomplete="off" required>
+    <div class="autocomplete-list" id="listPuesto">
+      <div class="autocomplete-loading">Cargando puestos…</div>
+    </div>
+  </div>
+
+  <div id="uploadProgress">
+    <div class="prog-label">Subiendo evidencias, espera un momento…</div>
+    <div id="uploadTrack"><div id="uploadBar"></div></div>
+    <div id="uploadPct">0%</div>
+  </div>
+
+  <button id="botonEnviar" type="button">📤 Generar folio y guardar</button>
+  <button id="botonConsultar" type="button">🔍 Consultar estatus</button>
+
+  <div id="status"></div>
+
+  <div id="folioBox">
+    <h3>Folio asignado</h3>
+    <div id="folioValue">FOL-0000</div>
+    <div class="folio-actions">
+      <button id="btnCopiarFolio" class="btn-ghost" type="button">📋 Copiar folio</button>
+      <button id="btnAbrirWhatsApp" class="btn-ghost" type="button">💬 Enviar por WhatsApp</button>
+    </div>
+    <div style="margin-top:10px;font-size:12px;color:var(--muted)">
+      Anota este folio para seguimiento — se guardó en la hoja.
+    </div>
+  </div>
+
+</form>
+
+<!-- MODAL: CONSULTA DE ESTATUS -->
+<div id="modalEstatus" role="dialog" aria-modal="true" aria-labelledby="tituloEstatus">
+  <div class="modal-card">
+    <button type="button" class="modal-close" id="btnCerrarEstatus" aria-label="Cerrar">✕</button>
+    <h3 id="tituloEstatus">🔍 Consultar estatus</h3>
+    <p class="modal-sub">Ingresa el folio que te fue asignado</p>
+
+    <input type="text" id="folioConsulta" placeholder="Ej. FOL-0001" autocomplete="off" autocapitalize="characters">
+    <button type="button" id="btnBuscarEstatus">Consultar</button>
+    <div id="estatusMsg"></div>
+
+    <div id="estatusResultado">
+      <div class="est-head">
+        <div class="est-folio" id="resFolio"></div>
+        <div class="est-badge" id="resEstatus"></div>
+      </div>
+      <div class="est-row"><span>📅 Fecha de ingreso</span><span id="resFecha"></span></div>
+      <div class="est-row"><span>👤 Quien refiere</span><span id="resRefiere"></span></div>
+      <div class="est-row"><span>🙋 Referido</span><span id="resReferido"></span></div>
+      <div class="est-row"><span>🏬 Sucursal</span><span id="resSucursal"></span></div>
+      <div class="est-row"><span>💼 Puesto</span><span id="resPuesto"></span></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── URL DE WEB APP ──────────────────────────────────────────────
+const GOOGLE_WEBAPP = "https://script.google.com/macros/s/AKfycby4Zp_0LamN2qfJKNbAK6F0FKohcqUIqAgkbs38Ewq0SPjEPv21kU7KPUv9gnHA1NE/exec";
+// ───────────────────────────────────────────────────────────────
+
+/* ══════════════════════════════════════════════
+   AUTOCOMPLETADO GENÉRICO
+   ══════════════════════════════════════════════ */
+function crearAutocompletado(inputId, listId, datos) {
+  const input   = document.getElementById(inputId);
+  const lista   = document.getElementById(listId);
+  let idxActivo = -1;
+
+  function resaltar(texto, query) {
+    if (!query) return texto;
+    const re = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    return texto.replace(re, '<em>$1</em>');
+  }
+
+  function mostrar(query) {
+    const q         = query.trim().toLowerCase();
+    const filtrados = q ? datos.filter(d => d.toLowerCase().includes(q)) : datos;
+    lista.innerHTML = '';
+    idxActivo = -1;
+    if (filtrados.length === 0) {
+      lista.innerHTML = '<div class="autocomplete-empty">Sin resultados</div>';
+    } else {
+      filtrados.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'autocomplete-item';
+        div.innerHTML = resaltar(item, query.trim());
+        div.addEventListener('mousedown', e => { e.preventDefault(); input.value = item; cerrar(); });
+        lista.appendChild(div);
+      });
+    }
+    lista.classList.add('open');
+  }
+
+  function cerrar() { lista.classList.remove('open'); idxActivo = -1; }
+
+  input.addEventListener('focus', () => mostrar(input.value));
+  input.addEventListener('input', () => mostrar(input.value));
+  input.addEventListener('blur',  () => setTimeout(cerrar, 150));
+  input.addEventListener('keydown', e => {
+    const items = lista.querySelectorAll('.autocomplete-item');
+    if (e.key === 'ArrowDown') { e.preventDefault(); idxActivo = Math.min(idxActivo+1, items.length-1); items.forEach((el,i)=>el.classList.toggle('active',i===idxActivo)); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); idxActivo = Math.max(idxActivo-1, 0); items.forEach((el,i)=>el.classList.toggle('active',i===idxActivo)); }
+    else if (e.key === 'Enter' && idxActivo >= 0) { e.preventDefault(); input.value = items[idxActivo].textContent; cerrar(); }
+    else if (e.key === 'Escape') cerrar();
+  });
+  document.addEventListener('click', e => { if (!input.contains(e.target) && !lista.contains(e.target)) cerrar(); });
+}
+
+/* ══════════════════════════════════════════════
+   CARGAR CATÁLOGOS CON JSONP (sin CORS)
+   ══════════════════════════════════════════════ */
+function llenarSelect(id, items, placeholder) {
+  const sel = document.getElementById(id);
+  sel.innerHTML = '';
+  const o0 = document.createElement('option');
+  o0.value = ''; o0.textContent = placeholder || '— Selecciona —';
+  sel.appendChild(o0);
+  (items || []).forEach(t => {
+    const o = document.createElement('option');
+    o.value = t; o.textContent = t;
+    sel.appendChild(o);
+  });
+}
+
+// Si el catálogo no carga, el select de Área se convierte en campo de texto para no bloquear el envío
+function fallbackAreaRefiere() {
+  const sel = document.getElementById('areaRefiere');
+  if (!sel || sel.tagName !== 'SELECT') return;
+  const inp = document.createElement('input');
+  inp.type = 'text'; inp.id = 'areaRefiere'; inp.placeholder = 'Escribe el área (dirección)';
+  sel.replaceWith(inp);
+}
+
+// data.areas = valores únicos de la columna DIRECCION de la hoja CATALOGO
+function configurarAreaRefiere(data) {
+  const areas = Array.isArray(data.areas) ? data.areas : [];
+  if (!areas.length) { fallbackAreaRefiere(); return; }
+  llenarSelect('areaRefiere', areas);
+}
+
+function cargarCatalogos() {
+  const cbName = 'jsonpCb_' + Date.now();
+  window[cbName] = function(data) {
+    document.getElementById('cargandoCatalogos').style.display = 'none';
+    if (data.status === 'success') {
+      crearAutocompletado('sucursal', 'listSucursal', data.tiendas || []);
+      crearAutocompletado('puesto',   'listPuesto',   data.puestos || []);
+      configurarAreaRefiere(data);
+      document.getElementById('listSucursal').innerHTML = '';
+      document.getElementById('listPuesto').innerHTML   = '';
+    } else {
+      document.getElementById('cargandoCatalogos').textContent = '⚠️ Error al cargar catálogos. Escribe manualmente.';
+      fallbackAreaRefiere();
+      document.getElementById('cargandoCatalogos').style.display = 'block';
+    }
+    delete window[cbName];
+    const s = document.getElementById('jsonpScript');
+    if (s) s.remove();
+  };
+  const script = document.createElement('script');
+  script.id  = 'jsonpScript';
+  script.src = GOOGLE_WEBAPP + '?callback=' + cbName;
+  script.onerror = () => {
+    document.getElementById('cargandoCatalogos').textContent = '⚠️ No se pudieron cargar los catálogos. Escribe manualmente.';
+    document.getElementById('listSucursal').innerHTML = '';
+    document.getElementById('listPuesto').innerHTML   = '';
+    fallbackAreaRefiere();
+    delete window[cbName];
+  };
+  document.body.appendChild(script);
+}
+cargarCatalogos();
+
+/* ══════════════════════════════════════════════
+   DROP ZONES
+   ══════════════════════════════════════════════ */
+function setupDropZone(inputId, previewId, dzId, statusId) {
+  const input = document.getElementById(inputId);
+  const prev  = document.getElementById(previewId);
+  const dz    = document.getElementById(dzId);
+  const st    = document.getElementById(statusId);
+
+  function loadFile(file) {
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      prev.src = e.target.result;
+      dz.classList.add('has-file');
+      st.textContent = '✅ Foto cargada';
+      st.className = 'ine-status ok';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  input.addEventListener('change', () => loadFile(input.files[0]));
+  dz.addEventListener('dragover',  e => { e.preventDefault(); dz.classList.add('dragover'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) { input.files = e.dataTransfer.files; loadFile(file); }
+  });
+}
+
+setupDropZone('ineFrente',       'prevFrente',       'dzFrente',       'stFrente');
+setupDropZone('ineReverso',      'prevReverso',      'dzReverso',      'stReverso');
+setupDropZone('fotoCuenta',      'prevCuenta',       'dzCuenta',       'stCuenta');
+setupDropZone('fotoFiscal',      'prevFiscal',       'dzFiscal',       'stFiscal');
+setupDropZone('fotoLicencia',    'prevLicencia',     'dzLicencia',     'stLicencia');
+setupDropZone('fotoCirculacion', 'prevCirculacion',  'dzCirculacion',  'stCirculacion');
+setupDropZone('fotoComprobante', 'prevComprobante',  'dzComprobante',  'stComprobante');
+setupDropZone('fotoImss',        'prevImss',         'dzImss',         'stImss');
+
+document.querySelectorAll('.clear-btn').forEach(btn => {
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    const input = document.getElementById(btn.dataset.target);
+    const prev  = document.getElementById(btn.dataset.prev);
+    const dz    = document.getElementById(btn.dataset.dz);
+    const st    = document.getElementById(btn.dataset.st);
+    input.value = ''; prev.src = ''; dz.classList.remove('has-file');
+    st.textContent = 'Sin foto'; st.className = 'ine-status warn';
+  });
+});
+
+/* ══════════════════════════════════════════════
+   HELPERS
+   ══════════════════════════════════════════════ */
+function vCampo(id) { return document.getElementById(id).value.trim(); }
+
+// ✅ Compresión adaptativa: el menor peso posible manteniendo el texto legible
+// (INE, cuenta, comprobantes). Prueba calidades JPEG de mayor a menor y, si aún
+// pesa de más, reduce dimensiones poco a poco hasta un mínimo legible.
+const IMG_MAX_PX      = 1200;        // lado máximo inicial (px)
+const IMG_MIN_PX      = 1000;        // nunca bajar de este lado mayor (legibilidad)
+const IMG_TARGET_KB   = 150;         // peso objetivo por imagen
+const IMG_Q_START     = 0.72;        // calidad JPEG inicial
+const IMG_Q_MIN       = 0.50;        // calidad JPEG mínima
+
+function toBase64(file) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('No se pudo leer una de las imágenes.')); };
+    img.onload = function () {
+      URL.revokeObjectURL(url);
+      const W0 = img.naturalWidth, H0 = img.naturalHeight;
+      const targetBytes = IMG_TARGET_KB * 1024;
+      let scale = Math.min(1, IMG_MAX_PX / Math.max(W0, H0));
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      let dataUrl = '';
+
+      while (true) {
+        const w = Math.max(1, Math.round(W0 * scale));
+        const h = Math.max(1, Math.round(H0 * scale));
+        canvas.width = w; canvas.height = h;
+        ctx.fillStyle = '#fff';               // evita fondo negro en PNG con transparencia
+        ctx.fillRect(0, 0, w, h);
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img, 0, 0, w, h);
+
+        for (let q = IMG_Q_START; q >= IMG_Q_MIN - 0.001; q -= 0.05) {
+          dataUrl = canvas.toDataURL('image/jpeg', q);
+          if (dataUrl.length * 0.75 <= targetBytes) return res(dataUrl);
+        }
+
+        // Aún pesa de más: reducir dimensiones, sin bajar del mínimo legible
+        if (Math.max(w, h) * 0.85 < IMG_MIN_PX) return res(dataUrl);
+        scale *= 0.85;
+      }
+    };
+    img.src = url;
+  });
+}
+
+function fechaHoy() {
+  const hoy = new Date();
+  return hoy.toLocaleDateString('es-MX', { year:'numeric', month:'2-digit', day:'2-digit' });
+}
+
+function construirResumen(d) {
+  const linea = '═══════════════════════════════════';
+  return (
+`🤝 NUEVO REFERIDO — JOINS US
+${linea}
+🧾 Folio:       ${d.folio}
+📅 Fecha:       ${fechaHoy()}
+${linea}
+👤 QUIEN REFIERE
+   Nombre:      ${d.nombre_refiere}
+   Área:        ${d.area_refiere || 'N/A'}
+   Estado:      ${d.estado_refiere || 'N/A'}
+   Ciudad:      ${d.ciudad_refiere || 'N/A'}
+
+👤 REFERIDO
+   Nombre:      ${d.nombre_referido}
+   📞 Tel 1:    ${d.telefono1}${d.telefono2 ? '\n   📞 Tel 2:    ' + d.telefono2 : ''}
+
+📍 UBICACIÓN DEL REFERIDO
+   Estado:      ${d.estado || 'N/A'}
+   Ciudad:      ${d.ciudad_municipio || 'N/A'}
+
+💼 VACANTE OFRECIDA
+   Sucursal:    ${d.sucursal}
+   Puesto:      ${d.puesto}
+${linea}
+📸 Documentos: INE frente, INE reverso, Número de cuenta, Comprobante de domicilio (+ opcionales si adjuntados)
+✅ Registrado en Google Sheets`
+  );
+}
+
+/* ══════════════════════════════════════════════
+   ENVÍO
+   ══════════════════════════════════════════════ */
+const btnEnviar  = document.getElementById('botonEnviar');
+const statusEl   = document.getElementById('status');
+const folioBox   = document.getElementById('folioBox');
+const folioValue = document.getElementById('folioValue');
+
+btnEnviar.onclick = async function () {
+  const frenteFile       = document.getElementById('ineFrente').files[0];
+  const reversoFile      = document.getElementById('ineReverso').files[0];
+  const cuentaFile       = document.getElementById('fotoCuenta').files[0];
+  const fiscalFile       = document.getElementById('fotoFiscal').files[0];
+  const licenciaFile     = document.getElementById('fotoLicencia').files[0];
+  const circulacionFile  = document.getElementById('fotoCirculacion').files[0];
+  const comprobanteFile  = document.getElementById('fotoComprobante').files[0];
+  const imssFile         = document.getElementById('fotoImss').files[0];
+
+  // Validaciones
+  if (!vCampo('nombreRefiere'))  { statusEl.className='err'; statusEl.textContent='❌ Falta el nombre de quien refiere.'; return; }
+  if (!vCampo('areaRefiere'))    { statusEl.className='err'; statusEl.textContent='❌ Falta el Área (Dirección) de quien refiere.'; return; }
+  if (!vCampo('estadoRefiere'))  { statusEl.className='err'; statusEl.textContent='❌ Falta el Estado de quien refiere.'; return; }
+  if (!vCampo('ciudadRefiere'))  { statusEl.className='err'; statusEl.textContent='❌ Falta la Ciudad de quien refiere.'; return; }
+  if (!vCampo('nombreReferido')) { statusEl.className='err'; statusEl.textContent='❌ Falta el nombre del referido.'; return; }
+  if (!vCampo('telefono1'))      { statusEl.className='err'; statusEl.textContent='❌ Falta el Teléfono 1 del referido.'; return; }
+  if (!/^\d{10}$/.test(vCampo('telefono1'))) { statusEl.className='err'; statusEl.textContent='❌ Teléfono 1 debe tener exactamente 10 dígitos.'; return; }
+  if (vCampo('telefono2') && !/^\d{10}$/.test(vCampo('telefono2'))) { statusEl.className='err'; statusEl.textContent='❌ Teléfono 2 debe tener exactamente 10 dígitos.'; return; }
+  if (!frenteFile) {
+    document.getElementById('stFrente').textContent='⚠️ Requerido'; document.getElementById('stFrente').className='ine-status err';
+    statusEl.className='err'; statusEl.textContent='❌ Falta el frente del INE.'; return;
+  }
+  if (!reversoFile) {
+    document.getElementById('stReverso').textContent='⚠️ Requerido'; document.getElementById('stReverso').className='ine-status err';
+    statusEl.className='err'; statusEl.textContent='❌ Falta el reverso del INE.'; return;
+  }
+  if (!cuentaFile) {
+    document.getElementById('stCuenta').textContent='⚠️ Requerido'; document.getElementById('stCuenta').className='ine-status err';
+    statusEl.className='err'; statusEl.textContent='❌ Falta la foto del número de cuenta.'; return;
+  }
+  if (!comprobanteFile) {
+    document.getElementById('stComprobante').textContent='⚠️ Requerido'; document.getElementById('stComprobante').className='ine-status err';
+    statusEl.className='err'; statusEl.textContent='❌ Falta el comprobante de domicilio.'; return;
+  }
+  if (!vCampo('sucursal')) { statusEl.className='err'; statusEl.textContent='❌ Falta la sucursal ofrecida.'; return; }
+  if (!vCampo('puesto'))   { statusEl.className='err'; statusEl.textContent='❌ Falta el puesto ofrecido.'; return; }
+
+  btnEnviar.disabled = true;
+  statusEl.className = 'info';
+  statusEl.textContent = 'Preparando imágenes…';
+
+  // Obligatorios siempre
+  const archivos  = [frenteFile, reversoFile, cuentaFile, comprobanteFile];
+  const etiquetas = ['INE_frente', 'INE_reverso', 'Numero_cuenta', 'Comprobante_domicilio'];
+  // Opcionales — solo si el usuario los adjuntó
+  if (fiscalFile)      { archivos.push(fiscalFile);      etiquetas.push('Constancia_fiscal'); }
+  if (licenciaFile)    { archivos.push(licenciaFile);    etiquetas.push('Licencia_conducir'); }
+  if (circulacionFile) { archivos.push(circulacionFile); etiquetas.push('Tarjeta_circulacion'); }
+  if (imssFile)        { archivos.push(imssFile);        etiquetas.push('IMSS'); }
+
+  const prog = document.getElementById('uploadProgress');
+  const bar  = document.getElementById('uploadBar');
+  const pct  = document.getElementById('uploadPct');
+  prog.style.display = 'block';
+
+  const evidencias = [];
+  for (let i = 0; i < archivos.length; i++) {
+    const b64 = await toBase64(archivos[i]);
+    evidencias.push({ data: b64.split(',')[1], tipo: 'image/jpeg', etiqueta: etiquetas[i] });
+    const p = Math.round(((i+1) / archivos.length) * 100);
+    bar.style.width = p + '%';
+    pct.textContent = p + '%';
+  }
+
+  statusEl.textContent = 'Guardando información…';
+
+  try {
+    const datos = {
+      nombre_refiere:   vCampo('nombreRefiere'),
+      area_refiere:     vCampo('areaRefiere'),
+      estado_refiere:   vCampo('estadoRefiere'),
+      ciudad_refiere:   vCampo('ciudadRefiere'),
+      nombre_referido:  vCampo('nombreReferido'),
+      telefono1:        vCampo('telefono1'),
+      telefono2:        vCampo('telefono2'),
+      estado:           vCampo('estado'),
+      ciudad_municipio: vCampo('ciudadMunicipio'),
+      sucursal:         vCampo('sucursal'),
+      puesto:           vCampo('puesto'),
+      evidencias:       evidencias
+    };
+
+    const r = await fetch(GOOGLE_WEBAPP, {
+      method: 'POST',
+      redirect: 'follow',
+      body: JSON.stringify(datos)
+    });
+
+    // ✅ FIX: Leer como texto primero por si Google devuelve HTML en error
+    const texto = await r.text();
+    let j;
+    try {
+      j = JSON.parse(texto);
+    } catch(_) {
+      throw new Error('Respuesta inesperada del servidor: ' + texto.substring(0, 200));
+    }
+
+    if (j.status !== 'success') throw new Error(j.mensaje || 'Error del servidor');
+
+    // ✅ FIX: El Apps Script ya devuelve el folio formateado (FOL-XXXX)
+    const folioFmt = j.folio;
+    folioValue.textContent = folioFmt;
+    folioBox.style.display = 'block';
+
+    const resumen = construirResumen({ ...datos, folio: folioFmt });
+
+    document.getElementById('btnCopiarFolio').onclick = () => {
+      navigator.clipboard.writeText(folioFmt).then(() => alert('✅ Folio copiado al portapapeles'));
+    };
+    document.getElementById('btnAbrirWhatsApp').onclick = () => {
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(resumen)}`, '_blank');
+    };
+
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(resumen)}`, '_blank');
+
+    statusEl.className   = 'ok';
+    statusEl.textContent = '✅ Guardado correctamente';
+
+  } catch (err) {
+    console.error(err);
+    statusEl.className   = 'err';
+    // ✅ FIX: Mostrar el error real en lugar de mensaje genérico
+    statusEl.textContent = '❌ Error: ' + err.message;
+    btnEnviar.disabled   = false;
+  }
+};
+
+/* ══════════════════════════════════════════════
+   CONSULTA DE ESTATUS POR FOLIO (JSONP, sin CORS)
+   ══════════════════════════════════════════════ */
+const modalEstatus  = document.getElementById('modalEstatus');
+const inputFolioC   = document.getElementById('folioConsulta');
+const btnBuscar     = document.getElementById('btnBuscarEstatus');
+const estatusMsg    = document.getElementById('estatusMsg');
+const estatusResult = document.getElementById('estatusResultado');
+
+function abrirModalEstatus() {
+  estatusMsg.textContent = '';
+  estatusResult.style.display = 'none';
+  modalEstatus.classList.add('open');
+  setTimeout(() => inputFolioC.focus(), 50);
+}
+function cerrarModalEstatus() { modalEstatus.classList.remove('open'); }
+
+document.getElementById('botonConsultar').onclick = abrirModalEstatus;
+document.getElementById('btnCerrarEstatus').onclick = cerrarModalEstatus;
+modalEstatus.addEventListener('mousedown', e => { if (e.target === modalEstatus) cerrarModalEstatus(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarModalEstatus(); });
+inputFolioC.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); btnBuscar.click(); } });
+
+function pedirEstatus(folio) {
+  return new Promise((resolve, reject) => {
+    const cb = 'jsonpEst_' + Date.now();
+    const s  = document.createElement('script');
+    const limpiar = () => { clearTimeout(timer); delete window[cb]; s.remove(); };
+    const timer = setTimeout(() => { limpiar(); reject(new Error('Tiempo de espera agotado. Intenta de nuevo.')); }, 15000);
+    window[cb] = d => { limpiar(); resolve(d); };
+    s.onerror  = () => { limpiar(); reject(new Error('No se pudo conectar con el servidor.')); };
+    s.src = GOOGLE_WEBAPP + '?action=consulta&folio=' + encodeURIComponent(folio) + '&callback=' + cb;
+    document.body.appendChild(s);
+  });
+}
+
+btnBuscar.onclick = async function () {
+  const folio = inputFolioC.value.trim();
+  estatusResult.style.display = 'none';
+  if (!folio) { estatusMsg.className = 'err'; estatusMsg.textContent = '❌ Escribe tu folio.'; return; }
+
+  btnBuscar.disabled = true;
+  estatusMsg.className = 'info';
+  estatusMsg.textContent = 'Consultando…';
+
+  try {
+    const d = await pedirEstatus(folio);
+    if (d.status !== 'success') throw new Error(d.mensaje || 'No se encontró el folio.');
+
+    // textContent (no innerHTML): los datos vienen de la hoja
+    const v = x => (x && String(x).trim()) ? x : '—';
+    document.getElementById('resFolio').textContent     = d.folio;
+    document.getElementById('resEstatus').textContent   = v(d.estatus);
+    document.getElementById('resFecha').textContent     = v(d.fecha);
+    document.getElementById('resRefiere').textContent   = v(d.refiere);
+    document.getElementById('resReferido').textContent  = v(d.referido);
+    document.getElementById('resSucursal').textContent  = v(d.sucursal);
+    document.getElementById('resPuesto').textContent    = v(d.puesto);
+
+    estatusMsg.textContent = '';
+    estatusResult.style.display = 'block';
+  } catch (err) {
+    estatusMsg.className = 'err';
+    estatusMsg.textContent = '❌ ' + err.message;
+  } finally {
+    btnBuscar.disabled = false;
+  }
+};
+</script>
+</body>
+</html>
