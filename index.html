@@ -3,7 +3,11 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Formulario de Referidos Admon</title>
+<!-- ▼▼ VERSIÓN DE LA APP: cambia SOLO este número cada vez que subas una actualización ▼▼ -->
+<meta name="app-version" content="2026.10.08.1" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<title>Formulario de Referidos</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
@@ -118,10 +122,44 @@ input:focus, select:focus { outline: none; border-color: var(--blue); background
 #botonEnviar:active { transform: scale(0.98); }
 #botonEnviar:disabled { opacity: 0.55; cursor: not-allowed; }
 
-#status { margin-top: 14px; font-weight: 700; text-align: center; font-size: 14px; min-height: 20px; }
+#status { margin-top: 14px; font-weight: 700; text-align: center; font-size: 14px; min-height: 20px; white-space: pre-line; }
 #status.ok   { color: var(--green); }
 #status.err  { color: var(--red); }
 #status.info { color: var(--muted); }
+
+/* ── VACANTES POR PUESTO ── */
+#vacantesBox { display: none; margin-top: 14px; }
+#vacantesTitulo { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 8px; }
+#vacantesAviso { display: none; font-size: 13px; font-weight: 600; margin-bottom: 10px; padding: 10px 12px; border-radius: 8px; white-space: pre-line; }
+#vacantesAviso.info { display: block; background: var(--blue-light); color: var(--blue); border: 1px solid var(--blue-mid); }
+#vacantesAviso.warn { display: block; background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
+#vacantesAviso.err  { display: block; background: #fef2f2; color: var(--red); border: 1px solid #fecaca; }
+#filtroCiudadWrap { margin-top: 6px; }
+#filtroHint { font-size: 12px; color: var(--muted); margin-top: 6px; min-height: 14px; }
+#filtroCiudadWrap label { margin-top: 8px; font-size: 12px; color: var(--muted); }
+#filtroCiudadWrap input, #filtroCiudadWrap select { margin-top: 4px; }
+#vacantesLista {
+  max-height: 340px; overflow-y: auto; overscroll-behavior: contain;
+  padding: 2px 6px 0 2px; margin-bottom: 4px;
+  scrollbar-width: thin;
+}
+#vacantesLista::-webkit-scrollbar { width: 6px; }
+#vacantesLista::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
+.vac-card {
+  display: block; width: 100%; text-align: left; font-family: inherit;
+  background: #fff; border: 1.5px solid var(--border); border-radius: 12px;
+  padding: 12px 14px; margin-bottom: 10px; cursor: pointer; color: var(--text);
+  transition: border-color 0.15s, background 0.15s;
+}
+.vac-card:hover { border-color: var(--blue); background: var(--blue-light); }
+.vac-card.sel { border-color: var(--blue); background: var(--blue-light); box-shadow: 0 0 0 2px var(--blue-mid); }
+.vac-card .vac-row { font-size: 14px; font-weight: 700; margin-bottom: 2px; }
+.vac-card .vac-row span { color: var(--muted); font-weight: 600; }
+.vac-card .vac-sub { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.vac-card .vac-tag { display: inline-block; margin-top: 6px; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; background: #dcfce7; color: #166534; }
+.vac-card.cartera { border-style: dashed; }
+.vac-card.cartera .vac-row { color: var(--muted); }
+.vac-card.cartera.sel .vac-row { color: var(--blue); }
 
 #folioBox {
   display: none;
@@ -301,10 +339,13 @@ input:focus, select:focus { outline: none; border-color: var(--blue); background
 </style>
 </head>
 <body>
+<div id="bannerPrueba" style="display:none;position:sticky;top:0;z-index:9999;background:#f59e0b;color:#1f2937;text-align:center;font:700 13px/1.4 system-ui,sans-serif;padding:8px 12px;">
+  🧪 MODO PRUEBA — no se guarda nada en Google Sheets ni en Drive
+</div>
 
 <form id="formReferidos" onsubmit="return false;">
 
-  <h2>🤝 Formulario de Referidos Admon</h2>
+  <h2>🤝 Formulario de Referidos</h2>
   <p class="subtitle">Completa los datos y adjunta los documentos solicitados del referido</p>
 
   <!-- INSTRUCCIONES -->
@@ -332,35 +373,6 @@ input:focus, select:focus { outline: none; border-color: var(--blue); background
   <div class="section-divider">Quien refiere</div>
   <label>👤 Nombre completo de quien refiere <span class="req">*</span></label>
   <input type="text" id="nombreRefiere" placeholder="Nombre completo" required>
-
-  <label>🏛️ Área (Dirección)<span class="req">*</span></label>
-  <select id="areaRefiere">
-    <option value="">Cargando…</option>
-  </select>
-
-  <div class="row">
-    <div>
-      <label>🗺️ Estado de quien refiere <span class="req">*</span></label>
-      <select id="estadoRefiere">
-        <option value="">— Selecciona —</option>
-        <option>Aguascalientes</option><option>Baja California</option><option>Baja California Sur</option>
-        <option>Campeche</option><option>Chiapas</option><option>Chihuahua</option>
-        <option>Ciudad de México</option><option>Coahuila</option><option>Colima</option>
-        <option>Durango</option><option>Estado de México</option><option>Guanajuato</option>
-        <option>Guerrero</option><option>Hidalgo</option><option>Jalisco</option>
-        <option>Michoacán</option><option>Morelos</option><option>Nayarit</option>
-        <option>Nuevo León</option><option>Oaxaca</option><option>Puebla</option>
-        <option>Querétaro</option><option>Quintana Roo</option><option>San Luis Potosí</option>
-        <option>Sinaloa</option><option>Sonora</option><option>Tabasco</option>
-        <option>Tamaulipas</option><option>Tlaxcala</option><option>Veracruz</option>
-        <option>Yucatán</option><option>Zacatecas</option>
-      </select>
-    </div>
-    <div>
-      <label>🏙️ Ciudad de quien refiere <span class="req">*</span></label>
-      <input type="text" id="ciudadRefiere" placeholder="Ciudad o municipio">
-    </div>
-  </div>
 
   <!-- REFERIDO -->
   <div class="section-divider">Datos del referido</div>
@@ -461,7 +473,7 @@ input:focus, select:focus { outline: none; border-color: var(--blue); background
       <div class="dz-label">Licencia de conducir</div>
       <div class="dz-hint">Toca para foto o galería · Arrastra aquí</div>
     </div>
-    <div class="ine-status" id="stLicencia" style="color:var(--muted);">Opcional — solo si aplica</div>
+    <div class="ine-status" id="stLicencia" style="color:var(--muted);">Opcional — solo si aplica para puesto "OPERADOR"</div>
   </div>
 
   <!-- TARJETA DE CIRCULACIÓN (Si aplica) -->
@@ -477,7 +489,7 @@ input:focus, select:focus { outline: none; border-color: var(--blue); background
       <div class="dz-label">Tarjeta de circulación</div>
       <div class="dz-hint">Toca para foto o galería · Arrastra aquí</div>
     </div>
-    <div class="ine-status" id="stCirculacion" style="color:var(--muted);">Opcional — solo si aplica</div>
+    <div class="ine-status" id="stCirculacion" style="color:var(--muted);">Opcional — solo si aplica para puesto "OPERADOR"</div>
   </div>
 
   <!-- COMPROBANTE DE DOMICILIO (Obligatorio) -->
@@ -512,8 +524,46 @@ input:focus, select:focus { outline: none; border-color: var(--blue); background
     <div class="ine-status" id="stImss" style="color:var(--muted);">Opcional — solo si aplica</div>
   </div>
 
+  <!-- VACANTE -->
+  <div class="section-divider">Detalles de la vacante</div>
+
+  <label>💼 Puesto ofrecido a persona referida <span class="req">*</span></label>
+  <div class="autocomplete-wrap">
+    <input type="text" id="puesto" placeholder="Escribe o elige un puesto…" autocomplete="off" required>
+    <div class="autocomplete-list" id="listPuesto">
+      <div class="autocomplete-loading">Cargando puestos…</div>
+    </div>
+  </div>
+  <div style="font-size:12px;color:var(--muted);margin-top:4px;">Elige el puesto para ver las vacantes disponibles.</div>
+
+  <div id="filtroCiudadWrap">
+    <div class="row">
+      <div>
+        <label for="filtroEstado">🗺️ Estado de la vacante</label>
+        <select id="filtroEstado"><option value="">— Todos —</option></select>
+      </div>
+      <div>
+        <label for="filtroCiudad">🏙️ Ciudad, Alcaldía y/o Municipio de la vacante</label>
+        <select id="filtroCiudad"><option value="">— Todas —</option></select>
+      </div>
+    </div>
+    <div id="filtroHint">⏳ Cargando estados y ciudades de las vacantes…</div>
+  </div>
+
+  <!-- Se llenan al tocar una ficha de vacante -->
+  <input type="hidden" id="folioVacante">
+  <input type="hidden" id="sucursal">
+
+  <div id="vacantesBox">
+    <div id="vacantesTitulo"></div>
+    <div id="vacantesAviso"></div>
+    <div id="vacantesLista"></div>
+    <div id="vacantesCartera"></div>
+  </div>
+
   <!-- UBICACIÓN -->
   <div class="section-divider">Ubicación de persona referida</div>
+  <div id="ubicHint" style="font-size:12px;color:var(--muted);margin-top:-4px;">Captura el estado y la ciudad del referido.</div>
   <div class="row">
     <div>
       <label>🗺️ Estado</label>
@@ -535,25 +585,6 @@ input:focus, select:focus { outline: none; border-color: var(--blue); background
     <div>
       <label>🏙️ Ciudad / Municipio de persona referida</label>
       <input type="text" id="ciudadMunicipio" placeholder="Ciudad o municipio">
-    </div>
-  </div>
-
-  <!-- VACANTE -->
-  <div class="section-divider">Detalles de la vacante</div>
-
-  <label>🏢 Sucursal ofrecida a persona referida <span class="req">*</span></label>
-  <div class="autocomplete-wrap">
-    <input type="text" id="sucursal" placeholder="Escribe para buscar tienda…" autocomplete="off" required>
-    <div class="autocomplete-list" id="listSucursal">
-      <div class="autocomplete-loading">Cargando tiendas…</div>
-    </div>
-  </div>
-
-  <label>💼 Puesto ofrecido a persona referida <span class="req">*</span></label>
-  <div class="autocomplete-wrap">
-    <input type="text" id="puesto" placeholder="Escribe para buscar puesto…" autocomplete="off" required>
-    <div class="autocomplete-list" id="listPuesto">
-      <div class="autocomplete-loading">Cargando puestos…</div>
     </div>
   </div>
 
@@ -609,13 +640,21 @@ input:focus, select:focus { outline: none; border-color: var(--blue); background
 
 <script>
 // ── URL DE WEB APP ──────────────────────────────────────────────
-const GOOGLE_WEBAPP = "https://script.google.com/macros/s/AKfycbzhDsOtDeimhegYvFr8HW-2i0UNvtnKfC4VhBiavTy6HO0kKJ18K9REhd8iwFBELUGT/exec";
+const GOOGLE_WEBAPP = "https://script.google.com/macros/s/AKfycbwLa3igOg23_VlNHemKyQV01CiBCAIxzAkr7eHj9ybplhSD7qWRChP-OwbGnVIqRUto/exec";
+
+// MODO PRUEBA: abrir el formulario con ?prueba=1 al final de la liga.
+// Las vacantes y puestos se consultan normal (solo lectura), pero al enviar NO se hace el POST a Sheets/Drive.
+const MODO_PRUEBA = /[?&](prueba|test)=(1|true|si|sí)(&|#|$)/i.test(location.search);
+if (MODO_PRUEBA) {
+  document.getElementById('bannerPrueba').style.display = 'block';
+  document.title = '🧪 PRUEBA — ' + document.title;
+}
 // ───────────────────────────────────────────────────────────────
 
 /* ══════════════════════════════════════════════
    AUTOCOMPLETADO GENÉRICO
    ══════════════════════════════════════════════ */
-function crearAutocompletado(inputId, listId, datos) {
+function crearAutocompletado(inputId, listId, datos, onSelect) {
   const input   = document.getElementById(inputId);
   const lista   = document.getElementById(listId);
   let idxActivo = -1;
@@ -628,7 +667,8 @@ function crearAutocompletado(inputId, listId, datos) {
 
   function mostrar(query) {
     const q         = query.trim().toLowerCase();
-    const filtrados = q ? datos.filter(d => d.toLowerCase().includes(q)) : datos;
+    const base      = typeof datos === 'function' ? datos() : datos;
+    const filtrados = q ? base.filter(d => d.toLowerCase().includes(q)) : base;
     lista.innerHTML = '';
     idxActivo = -1;
     if (filtrados.length === 0) {
@@ -638,7 +678,7 @@ function crearAutocompletado(inputId, listId, datos) {
         const div = document.createElement('div');
         div.className = 'autocomplete-item';
         div.innerHTML = resaltar(item, query.trim());
-        div.addEventListener('mousedown', e => { e.preventDefault(); input.value = item; cerrar(); });
+        div.addEventListener('mousedown', e => { e.preventDefault(); elegir(item); });
         lista.appendChild(div);
       });
     }
@@ -646,6 +686,7 @@ function crearAutocompletado(inputId, listId, datos) {
   }
 
   function cerrar() { lista.classList.remove('open'); idxActivo = -1; }
+  function elegir(item) { input.value = item; cerrar(); if (onSelect) onSelect(item); }
 
   input.addEventListener('focus', () => mostrar(input.value));
   input.addEventListener('input', () => mostrar(input.value));
@@ -654,7 +695,7 @@ function crearAutocompletado(inputId, listId, datos) {
     const items = lista.querySelectorAll('.autocomplete-item');
     if (e.key === 'ArrowDown') { e.preventDefault(); idxActivo = Math.min(idxActivo+1, items.length-1); items.forEach((el,i)=>el.classList.toggle('active',i===idxActivo)); }
     else if (e.key === 'ArrowUp') { e.preventDefault(); idxActivo = Math.max(idxActivo-1, 0); items.forEach((el,i)=>el.classList.toggle('active',i===idxActivo)); }
-    else if (e.key === 'Enter' && idxActivo >= 0) { e.preventDefault(); input.value = items[idxActivo].textContent; cerrar(); }
+    else if (e.key === 'Enter' && idxActivo >= 0) { e.preventDefault(); elegir(items[idxActivo].textContent); }
     else if (e.key === 'Escape') cerrar();
   });
   document.addEventListener('click', e => { if (!input.contains(e.target) && !lista.contains(e.target)) cerrar(); });
@@ -663,65 +704,31 @@ function crearAutocompletado(inputId, listId, datos) {
 /* ══════════════════════════════════════════════
    CARGAR CATÁLOGOS CON JSONP (sin CORS)
    ══════════════════════════════════════════════ */
-function llenarSelect(id, items, placeholder) {
-  const sel = document.getElementById(id);
-  sel.innerHTML = '';
-  const o0 = document.createElement('option');
-  o0.value = ''; o0.textContent = placeholder || '— Selecciona —';
-  sel.appendChild(o0);
-  (items || []).forEach(t => {
-    const o = document.createElement('option');
-    o.value = t; o.textContent = t;
-    sel.appendChild(o);
-  });
-}
+function cargarCatalogos() { cargarPuestos(); }
 
-// Si el catálogo no carga, el select de Área se convierte en campo de texto para no bloquear el envío
-function fallbackAreaRefiere() {
-  const sel = document.getElementById('areaRefiere');
-  if (!sel || sel.tagName !== 'SELECT') return;
-  const inp = document.createElement('input');
-  inp.type = 'text'; inp.id = 'areaRefiere'; inp.placeholder = 'Escribe el área (dirección)';
-  sel.replaceWith(inp);
-}
+const limpiarPuesto = x => String(x).replace(/^[\s\-–—•]+/, '').trim();
 
-// data.areas = valores únicos de la columna DIRECCION de la hoja CATALOGO
-function configurarAreaRefiere(data) {
-  const areas = Array.isArray(data.areas) ? data.areas : [];
-  if (!areas.length) { fallbackAreaRefiere(); return; }
-  llenarSelect('areaRefiere', areas);
-}
+// La lista de puestos sale SOLO de la hoja de vacantes (columna "Vacante"). Si no carga, se avisa el motivo y se puede escribir el puesto.
+async function cargarPuestos() {
+  const cargando = document.getElementById('cargandoCatalogos');
+  let lista = [], motivo = '';
+  try {
+    const d = await jsonpGet('action=puestos_vacantes', 'jsonpPuestos_',
+                             'Tiempo de espera agotado al cargar los puestos.', 'No se pudo conectar para cargar los puestos.');
+    if (d.status === 'success' && d.origen === 'vacantes' && Array.isArray(d.puestos)) lista = d.puestos;
+    else motivo = d.mensaje || 'El servidor no devolvió la lista desde la hoja de vacantes (¿falta publicar la nueva versión del script?).';
+  } catch (err) { motivo = err.message; }
 
-function cargarCatalogos() {
-  const cbName = 'jsonpCb_' + Date.now();
-  window[cbName] = function(data) {
-    document.getElementById('cargandoCatalogos').style.display = 'none';
-    if (data.status === 'success') {
-      crearAutocompletado('sucursal', 'listSucursal', data.tiendas || []);
-      crearAutocompletado('puesto',   'listPuesto',   data.puestos || []);
-      configurarAreaRefiere(data);
-      document.getElementById('listSucursal').innerHTML = '';
-      document.getElementById('listPuesto').innerHTML   = '';
-    } else {
-      document.getElementById('cargandoCatalogos').textContent = '⚠️ Error al cargar catálogos. Escribe manualmente.';
-      fallbackAreaRefiere();
-      document.getElementById('cargandoCatalogos').style.display = 'block';
-    }
-    delete window[cbName];
-    const s = document.getElementById('jsonpScript');
-    if (s) s.remove();
-  };
-  const script = document.createElement('script');
-  script.id  = 'jsonpScript';
-  script.src = GOOGLE_WEBAPP + '?callback=' + cbName;
-  script.onerror = () => {
-    document.getElementById('cargandoCatalogos').textContent = '⚠️ No se pudieron cargar los catálogos. Escribe manualmente.';
-    document.getElementById('listSucursal').innerHTML = '';
-    document.getElementById('listPuesto').innerHTML   = '';
-    fallbackAreaRefiere();
-    delete window[cbName];
-  };
-  document.body.appendChild(script);
+  catalogoPuestos = [...new Set(lista.map(limpiarPuesto).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'es'));
+  document.getElementById('listPuesto').innerHTML = '';
+  if (catalogoPuestos.length) {
+    cargando.style.display = 'none';
+    crearAutocompletado('puesto', 'listPuesto', puestosFiltrados, elegirPuesto);
+    cargarIndiceVacantes();
+  } else {
+    cargando.textContent = '⚠️ No se pudo cargar la lista de puestos desde la hoja de vacantes' + (motivo ? ': ' + motivo : '.') + ' Puedes escribir el puesto.';
+    cargando.style.display = 'block';
+  }
 }
 cargarCatalogos();
 
@@ -834,6 +841,11 @@ function fechaHoy() {
   return hoy.toLocaleDateString('es-MX', { year:'numeric', month:'2-digit', day:'2-digit' });
 }
 
+function bloqueVacante(d) {
+  // Solo el folio de la vacante (o CARTERA si no hay vacante que coincida)
+  return '   Folio de Vacante:  ' + (d.folio_vacante || 'N/A');
+}
+
 function construirResumen(d) {
   const linea = '═══════════════════════════════════';
   return (
@@ -844,9 +856,6 @@ ${linea}
 ${linea}
 👤 QUIEN REFIERE
    Nombre:      ${d.nombre_refiere}
-   Área:        ${d.area_refiere || 'N/A'}
-   Estado:      ${d.estado_refiere || 'N/A'}
-   Ciudad:      ${d.ciudad_refiere || 'N/A'}
 
 👤 REFERIDO
    Nombre:      ${d.nombre_referido}
@@ -857,8 +866,8 @@ ${linea}
    Ciudad:      ${d.ciudad_municipio || 'N/A'}
 
 💼 VACANTE OFRECIDA
-   Sucursal:    ${d.sucursal}
    Puesto:      ${d.puesto}
+${bloqueVacante(d)}
 ${linea}
 📸 Documentos: INE frente, INE reverso, Número de cuenta, Comprobante de domicilio (+ opcionales si adjuntados)
 ✅ Registrado en Google Sheets`
@@ -885,9 +894,6 @@ btnEnviar.onclick = async function () {
 
   // Validaciones
   if (!vCampo('nombreRefiere'))  { statusEl.className='err'; statusEl.textContent='❌ Falta el nombre de quien refiere.'; return; }
-  if (!vCampo('areaRefiere'))    { statusEl.className='err'; statusEl.textContent='❌ Falta el Área (Dirección) de quien refiere.'; return; }
-  if (!vCampo('estadoRefiere'))  { statusEl.className='err'; statusEl.textContent='❌ Falta el Estado de quien refiere.'; return; }
-  if (!vCampo('ciudadRefiere'))  { statusEl.className='err'; statusEl.textContent='❌ Falta la Ciudad de quien refiere.'; return; }
   if (!vCampo('nombreReferido')) { statusEl.className='err'; statusEl.textContent='❌ Falta el nombre del referido.'; return; }
   if (!vCampo('telefono1'))      { statusEl.className='err'; statusEl.textContent='❌ Falta el Teléfono 1 del referido.'; return; }
   if (!/^\d{10}$/.test(vCampo('telefono1'))) { statusEl.className='err'; statusEl.textContent='❌ Teléfono 1 debe tener exactamente 10 dígitos.'; return; }
@@ -908,8 +914,53 @@ btnEnviar.onclick = async function () {
     document.getElementById('stComprobante').textContent='⚠️ Requerido'; document.getElementById('stComprobante').className='ine-status err';
     statusEl.className='err'; statusEl.textContent='❌ Falta el comprobante de domicilio.'; return;
   }
-  if (!vCampo('sucursal')) { statusEl.className='err'; statusEl.textContent='❌ Falta la sucursal ofrecida.'; return; }
   if (!vCampo('puesto'))   { statusEl.className='err'; statusEl.textContent='❌ Falta el puesto ofrecido.'; return; }
+  if (!puestoActual || vCampo('puesto') !== puestoActual) {
+    statusEl.className='err'; statusEl.textContent='❌ Escribe o elige el puesto para ver las vacantes disponibles.';
+    document.getElementById('puesto').focus(); return;
+  }
+  if (!vacantesListas) {
+    statusEl.className='info'; statusEl.textContent='⏳ Espera a que terminen de cargar las vacantes del puesto.'; return;
+  }
+  if (!seleccion) {
+    statusEl.className='err';
+    statusEl.textContent='❌ Toca la ficha de la vacante que corresponde al referido, o elige "Ninguna coincide" para registrarlo en cartera.';
+    vacantesBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+  let esCartera = seleccion.tipo === 'cartera';
+  if (esCartera && !vCampo('estado'))          { statusEl.className='err'; statusEl.textContent='❌ Selecciona el estado del referido.'; selEstado.focus(); return; }
+  if (esCartera && !vCampo('ciudadMunicipio')) { statusEl.className='err'; statusEl.textContent='❌ Escribe la ciudad o municipio del referido.'; inpCiudad.focus(); return; }
+
+  btnEnviar.disabled = true;
+  let vac;
+  if (esCartera) {
+    vac = { ok: true, folio: 'CARTERA', estatus: 'CARTERA' };
+  } else {
+    // Revalida el folio elegido contra el Sheets de vacantes (pudo cubrirse o pausarse mientras llenaba el formulario)
+    statusEl.className = 'info';
+    statusEl.textContent = 'Verificando vacante…';
+    vacanteCache = null;
+    vac = null;
+    for (const f of (seleccion.folios || [seleccion.folio])) {   // si uno ya se cubrió, prueba el siguiente de la misma ficha
+      const r = await verificarVacante(f);
+      if (r.ok || r.definitivo === false) { vac = r; break; }
+      vac = r;
+    }
+    if (!vac.ok && vac.definitivo === false) {   // sin conexión: no se puede confirmar, que reintente
+      statusEl.className = 'err';
+      statusEl.textContent = '❌ ' + vac.mensaje;
+      btnEnviar.disabled = false;
+      return;
+    }
+    if (!vac.ok) {
+      // La vacante se cubrió o pausó mientras llenaba el formulario: no se bloquea, pasa a cartera
+      esCartera = true;
+      vac = { ok: true, folio: 'CARTERA', estatus: 'CARTERA' };
+      statusEl.className = 'info';
+      statusEl.textContent = 'ℹ️ Esa vacante ya no está disponible; el referido se registrará en cartera.';
+    }
+  }
 
   btnEnviar.disabled = true;
   statusEl.className = 'info';
@@ -943,32 +994,41 @@ btnEnviar.onclick = async function () {
   try {
     const datos = {
       nombre_refiere:   vCampo('nombreRefiere'),
-      area_refiere:     vCampo('areaRefiere'),
-      estado_refiere:   vCampo('estadoRefiere'),
-      ciudad_refiere:   vCampo('ciudadRefiere'),
       nombre_referido:  vCampo('nombreReferido'),
       telefono1:        vCampo('telefono1'),
       telefono2:        vCampo('telefono2'),
       estado:           vCampo('estado'),
       ciudad_municipio: vCampo('ciudadMunicipio'),
-      sucursal:         vCampo('sucursal'),
+      folio_vacante:    esCartera ? 'CARTERA' : (vac.folio || seleccion.folio),
+      sucursal:         esCartera ? 'CARTERA' : (seleccion.sucursal || vac.sucursal || ''),
       puesto:           vCampo('puesto'),
+      tipo_registro:    esCartera ? 'CARTERA' : 'VACANTE',
+      estado_vacante:   esCartera ? '' : seleccion.estado,
+      ciudad_vacante:   esCartera ? '' : seleccion.ciudad,
+      formato_vacante:  esCartera ? '' : (seleccion.formato || ''),
       evidencias:       evidencias
     };
 
-    const r = await fetch(GOOGLE_WEBAPP, {
-      method: 'POST',
-      redirect: 'follow',
-      body: JSON.stringify(datos)
-    });
-
-    // ✅ FIX: Leer como texto primero por si Google devuelve HTML en error
-    const texto = await r.text();
     let j;
-    try {
-      j = JSON.parse(texto);
-    } catch(_) {
-      throw new Error('Respuesta inesperada del servidor: ' + texto.substring(0, 200));
+    if (MODO_PRUEBA) {
+      // Simula la respuesta del servidor sin escribir en Sheets ni subir fotos a Drive
+      console.log('🧪 MODO PRUEBA — datos que se habrían enviado:', { ...datos, evidencias: datos.evidencias.map(e => e.etiqueta) });
+      await new Promise(r => setTimeout(r, 600));
+      j = { status: 'success', folio: 'PRUEBA-0000' };
+    } else {
+      const r = await fetch(GOOGLE_WEBAPP, {
+        method: 'POST',
+        redirect: 'follow',
+        body: JSON.stringify(datos)
+      });
+
+      // ✅ FIX: Leer como texto primero por si Google devuelve HTML en error
+      const texto = await r.text();
+      try {
+        j = JSON.parse(texto);
+      } catch(_) {
+        throw new Error('Respuesta inesperada del servidor: ' + texto.substring(0, 200));
+      }
     }
 
     if (j.status !== 'success') throw new Error(j.mensaje || 'Error del servidor');
@@ -978,7 +1038,7 @@ btnEnviar.onclick = async function () {
     folioValue.textContent = folioFmt;
     folioBox.style.display = 'block';
 
-    const resumen = construirResumen({ ...datos, folio: folioFmt });
+    const resumen = construirResumen({ ...datos, folio: folioFmt, estatus_vacante: vac.estatus });
 
     document.getElementById('btnCopiarFolio').onclick = () => {
       navigator.clipboard.writeText(folioFmt).then(() => alert('✅ Folio copiado al portapapeles'));
@@ -987,10 +1047,10 @@ btnEnviar.onclick = async function () {
       window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(resumen)}`, '_blank');
     };
 
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(resumen)}`, '_blank');
+    if (!MODO_PRUEBA) window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(resumen)}`, '_blank');
 
     statusEl.className   = 'ok';
-    statusEl.textContent = '✅ Guardado correctamente';
+    statusEl.textContent = MODO_PRUEBA ? '🧪 Prueba exitosa — no se guardó nada en Sheets' : '✅ Guardado correctamente';
 
   } catch (err) {
     console.error(err);
@@ -1000,6 +1060,338 @@ btnEnviar.onclick = async function () {
     btnEnviar.disabled   = false;
   }
 };
+
+/* ══════════════════════════════════════════════
+   PUESTO → FICHAS DE VACANTES DISPONIBLES
+   ══════════════════════════════════════════════ */
+// Respaldo local: el servidor (VAC_ESTATUS_BLOQUEADOS en ConsultaVacante.gs) es quien decide qué estatus se bloquean.
+const ESTATUS_VACANTE_BLOQUEADOS = ['CUBIERTA', 'PAUSADA', 'PAUSADO', 'PAUSADO JOIN US', 'CANCELADA', 'PAUSADO COMERCIAL'];
+const MSG_RH = 'El referido no puede ser considerado para ingreso en este momento; puede registrarse como Cartera.' + '\n' +
+               'Para cualquier aclaración o seguimiento, comunícate con el área de Recursos Humanos.';
+const claveEstatus = x => String(x || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Z0-9]/g, '');
+const normTxt      = x => String(x || '').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
+
+const inputPuesto    = document.getElementById('puesto');
+const hidFolio       = document.getElementById('folioVacante');
+const hidSucursal    = document.getElementById('sucursal');
+const vacantesBox    = document.getElementById('vacantesBox');
+const vacantesTitulo = document.getElementById('vacantesTitulo');
+const vacantesAviso  = document.getElementById('vacantesAviso');
+const vacantesLista  = document.getElementById('vacantesLista');
+const vacantesCartera = document.getElementById('vacantesCartera');
+const filtroCiudad     = document.getElementById('filtroCiudad');
+const filtroEstado     = document.getElementById('filtroEstado');
+const filtroHint       = document.getElementById('filtroHint');
+
+let indiceListo = false;   // true cuando ya se conoce qué puestos tienen vacantes vigentes
+let indiceVac = {};   // puesto -> vacantes abiertas (para filtrar la lista de puestos por estado/ciudad)
+
+const mapVac = v => {
+  const est  = String(v.estatus || '').trim();
+  const bloq = (typeof v.bloqueada === 'boolean') ? v.bloqueada : ESTATUS_VACANTE_BLOQUEADOS.map(claveEstatus).includes(claveEstatus(est));
+  return { folio: String(v.folio || '').trim().toUpperCase(), estado: String(v.estado || '').trim(), ciudad: String(v.ciudad || '').trim(),
+           sucursal: String(v.sucursal || '').trim(), formato: String(v.formato || '').trim(), estatus: est, bloqueada: bloq };
+};
+
+function coincideFiltro(v) {
+  const qE = normTxt(filtroEstado.value), qC = normTxt(filtroCiudad.value);
+  return (!qE || normTxt(v.estado) === qE) && (!qC || normTxt(v.ciudad) === qC);
+}
+
+// Lista de puestos que alimenta el autocompletado: solo puestos con al menos una vacante vigente
+// (abierta, no cubierta/pausada/cancelada) y, si hay estado/ciudad, que la tengan ahí.
+function puestosFiltrados() {
+  if (!indiceListo) return catalogoPuestos;   // el índice aún no carga (o falló): no se limita
+  return catalogoPuestos.filter(p => (indiceVac[p] || []).some(coincideFiltro));
+}
+
+function llenarCiudadesFiltro() {
+  const qEst = normTxt(filtroEstado.value);
+  const todas = Object.values(indiceVac).flat().concat(vacantesPuesto);
+  const actual = filtroCiudad.value;
+  filtroCiudad.length = 1;   // conserva solo "— Todas —"
+  [...new Set(todas.filter(v => !qEst || normTxt(v.estado) === qEst).map(v => v.ciudad).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, 'es'))
+    .forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; filtroCiudad.appendChild(o); });
+  filtroCiudad.value = actual;   // si ya no existe en la lista, vuelve a "— Todas —"
+}
+
+function llenarEstadosFiltro() {
+  const actual = filtroEstado.value;
+  const todas  = Object.values(indiceVac).flat().concat(vacantesPuesto);
+  filtroEstado.length = 1;
+  [...new Set(todas.map(v => v.estado).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, 'es'))
+    .forEach(e => { const o = document.createElement('option'); o.value = e; o.textContent = e; filtroEstado.appendChild(o); });
+  filtroEstado.value = actual;
+  llenarCiudadesFiltro();
+}
+
+// Consulta en segundo plano las vacantes de cada puesto (4 a la vez) para poder filtrar la lista de puestos
+async function cargarIndiceVacantes() {
+  // 1) Vía rápida: una sola consulta con todas las vacantes (requiere Code.gs v7 publicado)
+  try {
+    const d = await jsonpGet('action=vacantes_todas', 'jsonpVacTodas_',
+                             'Tiempo de espera agotado al cargar las vacantes.', 'No se pudo conectar para cargar las vacantes.', 60000);
+    if (d.status === 'success' && Array.isArray(d.vacantes)) {
+      d.vacantes.forEach(v => {
+        const p = limpiarPuesto(v.puesto);
+        if (!p) return;
+        const m = mapVac(v);
+        if (m.folio && !m.bloqueada) (indiceVac[p] = indiceVac[p] || []).push(m);
+      });
+      indiceListo = true;
+      llenarEstadosFiltro();
+      filtroHint.textContent = 'Filtra por estado y/o ciudad para reducir la lista de puestos.';
+      return;
+    }
+  } catch (_) { /* sin la acción nueva o sin conexión: se usa la vía lenta */ }
+
+  // 2) Respaldo: consulta puesto por puesto (4 a la vez)
+  const pend = [...catalogoPuestos], total = pend.length;
+  let hechos = 0;
+  const worker = async () => {
+    while (pend.length) {
+      const p = pend.shift();
+      try {
+        const d = await pedirVacantesPuesto(p);
+        if (d.status === 'success' && Array.isArray(d.vacantes)) indiceVac[p] = d.vacantes.map(mapVac).filter(v => v.folio && !v.bloqueada);
+      } catch (_) {}
+      hechos++;
+      filtroHint.textContent = '⏳ Cargando estados y ciudades de las vacantes… (' + hechos + '/' + total + ')';
+      if (hechos % 5 === 0) llenarEstadosFiltro();
+    }
+  };
+  await Promise.all(Array.from({ length: 4 }, worker));
+  indiceListo = Object.keys(indiceVac).length > 0;
+  llenarEstadosFiltro();
+  filtroHint.textContent = Object.keys(indiceVac).length
+    ? 'Filtra por estado y/o ciudad para reducir la lista de puestos.'
+    : '⚠️ No se pudieron cargar los estados y ciudades de las vacantes.';
+}
+
+filtroEstado.addEventListener('change', () => { filtroCiudad.value = ''; llenarCiudadesFiltro(); pintarVacantes(); });
+filtroCiudad.addEventListener('change', () => pintarVacantes());
+
+const selEstado  = document.getElementById('estado');
+const inpCiudad  = document.getElementById('ciudadMunicipio');
+const ubicHint   = document.getElementById('ubicHint');
+
+// Estado y Ciudad se capturan siempre a mano (no dependen de la vacante elegida).
+// modo 'manual' = va a cartera, donde son obligatorios; cualquier otro modo solo cambia el texto de ayuda.
+function modoUbicacion(modo) {
+  selEstado.disabled = false;
+  inpCiudad.readOnly = false;
+  inpCiudad.placeholder = 'Ciudad o municipio';
+  ubicHint.textContent = modo === 'manual'
+    ? 'Obligatorio: este referido va a cartera, captura su estado y ciudad.'
+    : 'Captura el estado y la ciudad del referido.';
+}
+
+let catalogoPuestos = [];
+let puestoActual    = '';     // puesto cuyas vacantes están en pantalla
+let vacantesPuesto  = [];     // vacantes abiertas de ese puesto
+let vacantesListas  = false;  // true cuando la consulta terminó bien
+let seleccion       = null;   // { tipo:'vacante', folio, sucursal, estado, ciudad, estatus } | { tipo:'cartera' }
+let reqVac          = 0;      // descarta respuestas viejas si el usuario cambia de puesto
+let vacanteCache    = null;   // { folio, res } — solo respuestas definitivas de verificarVacante
+
+function jsonpGet(params, prefijo, msgTimeout, msgError, ms = 15000) {
+  return new Promise((resolve, reject) => {
+    const cb = prefijo + Date.now() + '_' + Math.floor(Math.random() * 1000);
+    const s  = document.createElement('script');
+    const limpiar = () => { clearTimeout(timer); delete window[cb]; s.remove(); };
+    const timer = setTimeout(() => { limpiar(); reject(new Error(msgTimeout)); }, ms);
+    window[cb] = d => { limpiar(); resolve(d); };
+    s.onerror  = () => { limpiar(); reject(new Error(msgError)); };
+    s.src = GOOGLE_WEBAPP + '?' + params + '&callback=' + cb;
+    document.body.appendChild(s);
+  });
+}
+
+const pedirVacante = folio =>
+  jsonpGet('action=vacante&folio=' + encodeURIComponent(folio), 'jsonpVac_',
+           'Tiempo de espera agotado al verificar la vacante.', 'No se pudo conectar para verificar la vacante.');
+
+const pedirVacantesPuesto = puesto =>
+  jsonpGet('action=vacantes_puesto&puesto=' + encodeURIComponent(puesto), 'jsonpVacPuesto_',
+           'Tiempo de espera agotado al consultar las vacantes.', 'No se pudo conectar para consultar las vacantes.');
+
+// Revalida un folio puntual (se usa al enviar)
+async function verificarVacante(folioRaw) {
+  const folio = String(folioRaw || '').trim().toUpperCase();
+  if (vacanteCache && vacanteCache.folio === folio) return vacanteCache.res;
+  let res;
+  try {
+    const d = await pedirVacante(folio);
+    if (d.status !== 'success') {
+      res = { ok: false, definitivo: true, mensaje: d.mensaje || ('El Folio de Vacante no existe.' + '\n' + MSG_RH) };
+    } else {
+      const est  = String(d.estatus || '').trim();
+      const bloq = (typeof d.bloqueada === 'boolean') ? d.bloqueada : ESTATUS_VACANTE_BLOQUEADOS.map(claveEstatus).includes(claveEstatus(est));
+      res = {
+        ok: !bloq, definitivo: true,
+        folio: d.folio || folio,
+        estatus: est || '—',
+        sucursal: d.sucursal || '', puesto: d.puesto || '',
+        mensaje: bloq ? (d.mensaje || MSG_RH) : ''
+      };
+    }
+  } catch (err) {
+    return { ok: false, definitivo: false, mensaje: err.message };
+  }
+  vacanteCache = { folio, res };
+  return res;
+}
+
+function avisar(cls, txt) { vacantesAviso.className = cls; vacantesAviso.textContent = txt; }
+
+function limpiarVacantes() {
+  reqVac++;
+  puestoActual = ''; vacantesPuesto = []; vacantesListas = false; seleccion = null;
+  hidFolio.value = ''; hidSucursal.value = '';
+  modoUbicacion('espera');
+  vacantesBox.style.display = 'none';
+  vacantesTitulo.textContent = '';
+  vacantesLista.textContent = '';
+  vacantesCartera.textContent = '';
+  avisar('', '');
+}
+
+function seleccionar(sel) {
+  const antes = seleccion;
+  seleccion = sel;
+  modoUbicacion(sel.tipo === 'cartera' ? 'manual' : 'normal');
+  hidFolio.value    = sel.tipo === 'cartera' ? 'CARTERA' : sel.folio;
+  hidSucursal.value = sel.tipo === 'cartera' ? 'CARTERA' : (sel.sucursal || '');
+  pintarVacantes();
+}
+
+async function elegirPuesto(nombre) {
+  const puesto = String(nombre || '').trim();
+  if (!puesto) { limpiarVacantes(); return; }
+  if (puesto === puestoActual) return;
+  limpiarVacantes();
+  puestoActual = puesto;
+  const mio = reqVac;
+  vacantesBox.style.display = 'block';
+  vacantesTitulo.textContent = 'Buscando vacantes de ' + puesto + '…';
+  try {
+    const d = await pedirVacantesPuesto(puesto);
+    if (mio !== reqVac) return;   // el usuario ya cambió de puesto
+    if (d.status !== 'success' || !Array.isArray(d.vacantes)) throw new Error(d.mensaje || 'El servidor no devolvió la lista de vacantes.');
+    vacantesPuesto = d.vacantes.map(mapVac).filter(v => v.folio && !v.bloqueada);
+    llenarEstadosFiltro();
+    vacantesListas = true;
+    if (!vacantesPuesto.length) seleccionar({ tipo: 'cartera' });
+    pintarVacantes();
+  } catch (err) {
+    if (mio !== reqVac) return;
+    // No se pudo consultar: no se bloquea al usuario, el referido sigue como cartera
+    vacantesPuesto = []; vacantesListas = true;
+    seleccionar({ tipo: 'cartera' });
+    pintarVacantes();
+    avisar('warn', '⚠️ No se pudieron consultar las vacantes (' + err.message + ').\nEl referido se registrará en cartera. Para reintentar, vuelve a elegir el puesto.');
+  }
+}
+
+// textContent (no innerHTML): los datos vienen de la hoja
+function crearFila(icono, etiqueta, valor) {
+  const r = document.createElement('div');
+  r.className = 'vac-row';
+  const e = document.createElement('span');
+  e.textContent = icono + ' ' + etiqueta + ': ';
+  r.appendChild(e);
+  r.appendChild(document.createTextNode(valor || '—'));
+  return r;
+}
+
+// Agrupa vacantes idénticas (mismo estado, ciudad, formato y sucursal) en una sola ficha
+function agruparVacantes(vacs) {
+  const mapa = new Map();
+  vacs.forEach(v => {
+    const clave = [v.estado, v.ciudad, v.formato, v.sucursal].map(normTxt).join('|');
+    if (!mapa.has(clave)) mapa.set(clave, { clave, estado: v.estado, ciudad: v.ciudad, formato: v.formato, sucursal: v.sucursal, vacantes: [] });
+    mapa.get(clave).vacantes.push({ folio: v.folio, estatus: v.estatus });
+  });
+  return [...mapa.values()];
+}
+
+function pintarVacantes() {
+  if (!vacantesListas) return;
+  const totalAbiertas = vacantesPuesto.length;
+
+  const hayFiltro = !!(filtroEstado.value || normTxt(filtroCiudad.value));
+  const filtradas = vacantesPuesto.filter(coincideFiltro);
+  const grupos = agruparVacantes(filtradas);
+  const total  = filtradas.length;
+
+  vacantesLista.textContent = '';
+  vacantesCartera.textContent = '';
+  vacantesTitulo.textContent = totalAbiertas
+    ? (hayFiltro ? total + ' de ' + totalAbiertas : totalAbiertas) + (totalAbiertas === 1 ? ' vacante abierta' : ' vacantes abiertas') + ' para ' + puestoActual + ' — toca la que corresponda al referido'
+    : 'Vacantes de ' + puestoActual;
+
+  if (!totalAbiertas)  avisar('info', 'No hay vacantes abiertas para este puesto.\nPuedes continuar: el referido se irá a la cartera de vacantes.');
+  else if (!total)     avisar('warn', 'No hay vacantes con ese estado y ciudad. Prueba con otra ciudad o borra el filtro.');
+  else                 avisar('', '');
+
+  grupos.forEach(g => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'vac-card' + (seleccion && seleccion.tipo === 'vacante' && seleccion.clave === g.clave ? ' sel' : '');
+    b.appendChild(crearFila('🗺️', 'Estado', g.estado));
+    b.appendChild(crearFila('🏙️', 'Ciudad', g.ciudad));
+    b.appendChild(crearFila('🏬', 'Formato', g.formato));
+    b.appendChild(crearFila('📍', 'Sucursal', g.sucursal));
+    const n = g.vacantes.length;
+    if (n > 1) {
+      const tag = document.createElement('div');
+      tag.className = 'vac-tag';
+      tag.textContent = n + ' vacantes disponibles';
+      b.appendChild(tag);
+    } else {
+      const sub = document.createElement('div');
+      sub.className = 'vac-sub';
+      sub.textContent = [g.vacantes[0].folio, g.vacantes[0].estatus].filter(Boolean).join(' · ');
+      b.appendChild(sub);
+    }
+    b.addEventListener('click', () => seleccionar({
+      tipo: 'vacante', clave: g.clave, folio: g.vacantes[0].folio, folios: g.vacantes.map(x => x.folio),
+      sucursal: g.sucursal, formato: g.formato, estado: g.estado, ciudad: g.ciudad, estatus: g.vacantes[0].estatus
+    }));
+    vacantesLista.appendChild(b);
+  });
+
+  const c = document.createElement('button');
+  c.type = 'button';
+  c.className = 'vac-card cartera' + (seleccion && seleccion.tipo === 'cartera' ? ' sel' : '');
+  const ct = document.createElement('div');
+  ct.className = 'vac-row';
+  ct.textContent = '📂 ' + (totalAbiertas ? 'Si la vacante no se encuentra disponible en la lista, el referido quedará registrado como Cartera de Vacante para su seguimiento posterior.' : 'Cartera de vacantes');
+  c.appendChild(ct);
+  const sub = document.createElement('div');
+  sub.className = 'vac-sub';
+  sub.textContent = 'Este referido se contará para la cartera de vacantes.';
+  c.appendChild(sub);
+  c.addEventListener('click', () => seleccionar({ tipo: 'cartera' }));
+  vacantesCartera.appendChild(c);   // fuera del scroll: siempre visible
+}
+
+// Si cambia el texto del puesto, se descartan las fichas anteriores
+inputPuesto.addEventListener('input', () => {
+  if (inputPuesto.value.trim() !== puestoActual) limpiarVacantes();
+});
+// Si escribió el puesto completo sin tocar la lista, se reconoce al salir del campo
+inputPuesto.addEventListener('blur', () => setTimeout(() => {
+  const txt = inputPuesto.value.trim();
+  if (!txt || txt === puestoActual) return;
+  const exacto = catalogoPuestos.find(p => normTxt(p) === normTxt(txt));
+  if (exacto) { inputPuesto.value = exacto; elegirPuesto(exacto); }
+  else        { elegirPuesto(txt); }   // puesto fuera de la lista: no se limita, se consulta y, si no hay vacante, va a cartera
+}, 220));
+
+modoUbicacion('espera');
 
 /* ══════════════════════════════════════════════
    CONSULTA DE ESTATUS POR FOLIO (JSONP, sin CORS)
@@ -1069,6 +1461,101 @@ btnBuscar.onclick = async function () {
     btnBuscar.disabled = false;
   }
 };
+
+/* ══════════════════════════════════════════════
+   ACTUALIZACIÓN OBLIGATORIA
+   Cada minuto (y al volver a la pestaña) se descarga esta misma página sin caché y se compara
+   su <meta name="app-version">. Si cambió, se bloquea la pantalla y se recarga con la versión nueva.
+   - Mientras se envía el registro o ya se muestra el folio NO se interrumpe (se espera).
+   - Si el formulario está vacío: recarga sola en 15 s.
+   - Si ya hay datos capturados: no recarga sola; exige pulsar el botón (avisa que se perderán).
+   ══════════════════════════════════════════════ */
+const APP_VERSION = (document.querySelector('meta[name="app-version"]') || {}).content || '0';
+const UPDATE_CHECK_MS = 60000;
+const UPDATE_COUNTDOWN_S = 15;
+let _updateMostrado = false;
+
+function formularioOcupado() {
+  // Enviando (botón deshabilitado) o folio ya mostrado: no se debe recargar
+  const folio = document.getElementById('folioBox');
+  const folioVisible = folio && getComputedStyle(folio).display !== 'none';
+  return !!(btnEnviar && btnEnviar.disabled) || folioVisible;
+}
+function formularioConDatos() {
+  const f = document.getElementById('formReferidos');
+  if (!f) return false;
+  return Array.from(f.elements).some(el => {
+    if (!el.name && !el.id) return false;
+    const t = (el.type || '').toLowerCase();
+    if (['button','submit','reset','hidden'].includes(t)) return false;
+    if (t === 'file') return el.files && el.files.length > 0;
+    if (t === 'checkbox' || t === 'radio') return el.checked;
+    return String(el.value || '').trim() !== '';
+  });
+}
+
+function mostrarAvisoActualizacion(nueva) {
+  if (_updateMostrado) return;
+  _updateMostrado = true;
+  const conDatos = formularioConDatos();
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:100000;background:rgba(15,23,42,.85);display:flex;align-items:center;justify-content:center;padding:20px;font-family:"IBM Plex Sans",Arial,sans-serif;';
+  ov.innerHTML = `
+    <div style="background:#fff;color:#1a2535;border:2px solid #0077b6;border-radius:16px;max-width:400px;width:100%;padding:26px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.4);">
+      <div style="font-size:40px;line-height:1;">🔄</div>
+      <h2 style="margin:10px 0 8px;font-size:19px;font-weight:700;color:#0077b6;">Nueva versión disponible</h2>
+      <p style="margin:0 0 14px;color:#64748b;font-size:14px;">
+        El formulario se actualizó y es necesario recargarlo para continuar.
+        ${conDatos ? '<br><b style="color:#dc2626;">Lo que alcanzaste a capturar se borrará y tendrás que llenarlo de nuevo.</b>' : ''}
+      </p>
+      <button id="updateNowBtn" style="background:#0077b6;color:#fff;border:0;border-radius:10px;padding:12px 22px;font-weight:700;font-size:15px;cursor:pointer;width:100%;">Actualizar ahora</button>
+      ${conDatos ? '' : `<p style="margin:12px 0 0;font-size:12px;color:#64748b;">Se actualizará solo en <b id="updateSecs">${UPDATE_COUNTDOWN_S}</b> s</p>`}
+    </div>`;
+  document.body.appendChild(ov);
+  const recargar = () => {
+    const u = new URL(location.href);
+    u.searchParams.set('_v', nueva);   // salta la caché; conserva ?prueba=1 y demás parámetros
+    location.replace(u.toString());
+  };
+  ov.querySelector('#updateNowBtn').onclick = recargar;
+  if (!conDatos) {
+    let left = UPDATE_COUNTDOWN_S;
+    setInterval(() => {
+      left--;
+      const el = document.getElementById('updateSecs');
+      if (el) el.textContent = Math.max(left, 0);
+      if (left <= 0) recargar();
+    }, 1000);
+  }
+}
+
+async function revisarActualizacion() {
+  if (_updateMostrado || location.protocol === 'file:') return;
+  try {
+    const u = new URL(location.href);
+    u.hash = '';
+    u.searchParams.set('_chk', Date.now());
+    const r = await fetch(u.toString(), { cache: 'no-store' });
+    if (!r.ok) return;
+    const html = await r.text();
+    const m = html.match(/<meta\s+name=["']app-version["']\s+content=["']([^"']+)["']/i);
+    if (m && m[1] && m[1] !== APP_VERSION) {
+      if (formularioOcupado()) return;   // se reintenta en el siguiente ciclo
+      mostrarAvisoActualizacion(m[1]);
+    }
+  } catch (e) { /* sin red: se reintenta después */ }
+}
+
+(function iniciarRevisionActualizacion() {
+  const tag = document.createElement('div');
+  tag.textContent = 'v' + APP_VERSION;
+  tag.style.cssText = 'position:fixed;right:8px;bottom:6px;font-size:11px;opacity:.45;z-index:50;pointer-events:none;font-family:monospace;';
+  document.body.appendChild(tag);
+  setTimeout(revisarActualizacion, 3000);
+  setInterval(revisarActualizacion, UPDATE_CHECK_MS);
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') revisarActualizacion(); });
+  window.addEventListener('online', revisarActualizacion);
+})();
 </script>
 </body>
 </html>
